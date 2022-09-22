@@ -7,11 +7,12 @@ plugins {
 	kotlin("plugin.spring") version "1.6.21"
 	kotlin("plugin.jpa") version "1.6.21"
 	kotlin("kapt") version "1.3.61"
+	id("jacoco")
 }
 
 group = "spring.boot"
 version = "0.0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_17
+java.sourceCompatibility = JavaVersion.VERSION_11
 
 configurations {
 	compileOnly {
@@ -22,11 +23,8 @@ configurations {
 repositories {
 	mavenCentral()
 }
-subprojects {
 
-	val querydslVersion = "5.0.0"
-	apply(plugin = "java")
-	apply(plugin = "kotlin-kapt")
+val querydslVersion = "5.0.0"
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -43,8 +41,6 @@ dependencies {
 	implementation("com.querydsl:querydsl-jpa:$querydslVersion")
 	kapt("com.querydsl:querydsl-apt:$querydslVersion:jpa")
 	kapt("org.springframework.boot:spring-boot-configuration-processor")
-
-	}
 }
 
 sourceSets["main"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourceSet::class) {
@@ -54,11 +50,29 @@ sourceSets["main"].withConvention(org.jetbrains.kotlin.gradle.plugin.KotlinSourc
 tasks.withType<KotlinCompile> {
 	kotlinOptions {
 		freeCompilerArgs = listOf("-Xjsr305=strict")
-		jvmTarget = "17"
+		jvmTarget = "11"
 	}
 }
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+jacoco {
+	toolVersion = "0.8.7"
+
+}
+
+tasks.withType<JacocoReport> {
+	reports {
+		xml.required.set(false)
+		csv.required.set(false)
+		html.required.set(true)
+	}
+}
+
+tasks.withType<Test> {
+	useJUnitPlatform()
+	finalizedBy(tasks.jacocoTestReport)
 }
 
