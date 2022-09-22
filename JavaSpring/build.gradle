@@ -1,8 +1,15 @@
+buildscript {
+	ext {
+		queryDslVersion = "5.0.0"
+	}
+}
+
 plugins {
 	id 'org.springframework.boot' version '2.7.3'
 	id 'io.spring.dependency-management' version '1.0.13.RELEASE'
 	id "com.ewerk.gradle.plugins.querydsl" version "1.0.10"
 	id 'java'
+	id 'jacoco'
 }
 
 group = 'spring.boot'
@@ -27,7 +34,8 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
-	implementation 'com.querydsl:querydsl-jpa'
+	implementation "com.querydsl:querydsl-jpa:${queryDslVersion}"
+	implementation "com.querydsl:querydsl-apt:${queryDslVersion}"
 }
 
 tasks.named('test') {
@@ -51,4 +59,50 @@ configurations {
 
 compileQuerydsl {
 	options.annotationProcessorPath = configurations.querydsl
+}
+
+jacoco {
+	toolVersion = '0.8.5'
+}
+
+test {
+	useJUnitPlatform()
+
+	finalizedBy 'jacocoTestReport'
+
+	jacoco {
+		destinationFile = file("$buildDir/jacoco/jacoco.exec")
+	}
+}
+
+jacocoTestReport {
+	reports {
+		html.enabled true
+		xml.enabled false
+		csv.enabled false
+
+		html.destination file("src/jacoco/jacoco.html")
+	}
+	finalizedBy 'jacocoTestCoverageVerification'
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			enabled = true
+			element = 'CLASS'
+
+			limit {
+				counter = 'LINE'
+				value = 'COVERDRATIO'
+				minimum = 0.60
+			}
+
+			limit {
+				counter = 'BRANCH'
+				value = 'COVERDRATID'
+				minimum = 0.70
+			}
+		}
+	}
 }
